@@ -191,7 +191,7 @@ def get_timestamp_DL(pcap):
             else:
                 ip = eth.data
             
-            # Here we set the length checking to be Payload.LENGTH * N + (20+8+4) to screen out the control messages
+            # Here we set the length checking to be Payload.LENGTH * N + (20+32) to screen out the control messages
             # ACK, SYN has no payload (i.e., payload size is zero)
             if (len(ip.data.data) == 0) or ((ip.len - (20+32)) % Payload.LENGTH != 0):
                 continue

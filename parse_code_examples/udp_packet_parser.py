@@ -188,7 +188,7 @@ def get_timestamp_DL(pcap):
             else:
                 ip = eth.data
 
-            # Here we set the length checking to be Payload.LENGTH * N + (20+8+4) to screen out the control messages
+            # Here we set the length checking to be Payload.LENGTH * N + (20+8) to screen out the control messages
             if (ip.len - (20+8)) % Payload.LENGTH != 0:
                 continue
             

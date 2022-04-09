@@ -172,7 +172,9 @@ def get_timestamp_DL(pcap):
     # -------------------------------------------------------------------------------------------------
     timestamp_list = []
     # duplicate packets: 在不同時間點重複收到相同的 seq number (i.e., 發送時間相同的 payload)
-    # 由於 tcp 理應不存在 retransmission，因此推斷為不合理的現象，只記錄初次收到的時間戳記，後續收到則忽略不計
+    # 雖然 tcp 存在 retransmission，但一般而言，若發生 retransmission，代表前面的 packet 掉了
+    # 因此仍推斷 duplicate packets 為不合理的現象，只記錄初次收到的時間戳記，後續收到則忽略不計
+    # !!! 若 retransmission 發生也可能是因為回程的 ACK 沒有被收到，仍然是指記錄初次收到的 packet !!!
     seq_set = set()
     try:
         for i, (ts, buf) in enumerate(pcap):
@@ -210,9 +212,10 @@ def get_timestamp_DL(pcap):
                 datetimedec = int(tcp.data.hex()[ofst+0:ofst+8], 16)
                 microsec = int(tcp.data.hex()[ofst+8:ofst+16], 16)
                 pyl_time = str(to_utc8(datetimedec + microsec/1e6))
-                seq = int(tcp.data.hex()[ofst+16:ofst+24], 16)
+                # seq = int(tcp.data.hex()[ofst+16:ofst+24], 16)
+                seq = tcp.seq
                 # !!! 若有中途重啟 iperf (seq number 重置為 1)，推定此前的資料作廢，故重置 timestamp_list 和 seq_set !!!
-                # !!! 假定重啟 iperf 後的第一個 seq number 一定會收到，若沒收到則不會重置，危～ !!!
+                # !!! 但目前 tcp_seq-num 抓的是 hdr 中的 raw sequence num (而非 relative seq num)，因此出現 seq num 為 1 的機率微乎其微 !!!
                 # !!! 建議實驗時先開 tcpdump 再開 iperf，若需要重啟 iperf，就兩個都一起重開 !!!
                 if (seq == 1) and ((pyl_time, seq) not in seq_set):
                     timestamp_list = []

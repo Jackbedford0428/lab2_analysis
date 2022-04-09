@@ -174,7 +174,7 @@ def get_timestamp_DL(pcap):
     # duplicate packets: 在不同時間點重複收到相同的 seq number (i.e., 發送時間相同的 payload)
     # 雖然 tcp 存在 retransmission，但一般而言，若發生 retransmission，代表前面的 packet 掉了
     # 因此仍推斷 duplicate packets 為不合理的現象，只記錄初次收到的時間戳記，後續收到則忽略不計
-    # !!! 若 retransmission 發生也可能是因為回程的 ACK 沒有被收到，仍然是指記錄初次收到的 packet !!!
+    # !!! 即便 retransmission 發生也可能是因為回程的 ACK 沒有被收到，仍然先只記錄初次收到該 packet 的 timestamp !!!
     seq_set = set()
     try:
         for i, (ts, buf) in enumerate(pcap):

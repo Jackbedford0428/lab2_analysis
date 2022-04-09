@@ -15,6 +15,6 @@ Setting:
 ===================================
 _parser.py
 ===================================
-解析檔                  <= INPUT_FILE
+解析檔                <= INPUT_FILE
 udp_packet_parser.py <= udp.pcap/mix.pcap
 tcp_packet_parser.py <= tcp.pcap/mix.pcap

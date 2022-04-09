@@ -62,9 +62,9 @@ def print_packet(timestamp, buf, idx, fltr=False):
            timestamp: timestamp of a packet in dpkt pcap reader object
            buf: content of a packets in dpkt pcap reader object
            idx: no. of the capture in pcap reader
-           fltr (bool): display the info of specific data only (warning message still displayed)
+           fltr (bool): display the info of specific data only (warning message of others still displayed)
        Returns:
-           bool: whether it is the data we want
+           bool: whether it is data we want
     """
     # Print out the timestamp in UTC
     msg1 = 'Timestamp: %s' % str(to_utc8(timestamp))
@@ -140,7 +140,7 @@ def print_packets(pcap, N=50, fltr=False):
        Args:
            pcap: dpkt pcap reader object (dpkt.pcap.Reader)
            N (int): maximal display number (default: 50)
-           fltr (bool): display the info of specific data only (warning message still displayed)
+           fltr (bool): display the info of specific data only (warning message of others still displayed)
     """
     print('=======================================================================')
     # For each packet in the pcap process the contents
@@ -260,5 +260,4 @@ if __name__ == "__main__":
     print('max    intv', max(ls))
     print('median intv', np.median(ls))
     print()
-
 

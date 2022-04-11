@@ -235,6 +235,7 @@ def get_timestamp_DL(pcap):
 
 
 if __name__ == "__main__":
+    # cellphone_file = ""
     # cellphone_file = "udp.pcap"
     cellphone_file = "mix.pcap"
     

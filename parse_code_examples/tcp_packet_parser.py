@@ -130,9 +130,9 @@ def print_packet(timestamp, buf, idx, fltr=False):
             datetimedec = int(tcp.data.hex()[ofst+0:ofst+8], 16)
             microsec = int(tcp.data.hex()[ofst+8:ofst+16], 16)
             pyl_time = str(to_utc8((datetimedec + microsec / 1e6)))
-            # seq = int(tcp.data.hex()[ofst+16:ofst+24], 16)
-            seq = tcp.seq
-            print('     %s      (seq=%d)' % (pyl_time, seq))
+            seq = int(tcp.data.hex()[ofst+16:ofst+24], 16)
+            raw_seq = tcp.seq
+            print('     %s      (seq=%d raw_seq=%d)' % (pyl_time, seq, raw_seq))
             ofst += (Payload.LENGTH*2)  # 1 byte == 2 hexadecimal digits
     print()
     return True
@@ -212,8 +212,8 @@ def get_timestamp_DL(pcap):
                 datetimedec = int(tcp.data.hex()[ofst+0:ofst+8], 16)
                 microsec = int(tcp.data.hex()[ofst+8:ofst+16], 16)
                 pyl_time = str(to_utc8(datetimedec + microsec/1e6))
-                # seq = int(tcp.data.hex()[ofst+16:ofst+24], 16)
-                seq = tcp.seq
+                seq = int(tcp.data.hex()[ofst+16:ofst+24], 16)
+                raw_seq = tcp.seq
                 # !!! 若有中途重啟 iperf (seq number 重置為 1)，推定此前的資料作廢，故重置 timestamp_list 和 seq_set !!!
                 # !!! 但目前 tcp_seq-num 抓的是 hdr 中的 raw sequence num (而非 relative seq num)，因此出現 seq num 為 1 的機率微乎其微 !!!
                 # !!! 建議實驗時先開 tcpdump 再開 iperf，若需要重啟 iperf，就兩個都一起重開 !!!
@@ -226,7 +226,8 @@ def get_timestamp_DL(pcap):
                     # datetimedec (int): payload timestamp (e.g., 1644051509)
                     # microsec (int): payload timestamp (e.g., 989306)
                     # seq (int): payload sequence number (e.g., 1)
-                    timestamp_list.append((ts, datetimedec, microsec, seq))
+                    # raw_seq (int): raw sequence number (e.g., 1139234428)
+                    timestamp_list.append((ts, datetimedec, microsec, seq, raw_seq))
                     seq_set.add((pyl_time, seq))
                 ofst += (Payload.LENGTH*2)  # 1 byte == 2 hexadecimal digits
 
@@ -242,6 +243,7 @@ def get_timestamp_DL(pcap):
 
 
 if __name__ == "__main__":
+    # cellphone_file = ""
     # cellphone_file = "tcp.pcap"
     cellphone_file = "mix.pcap"
     

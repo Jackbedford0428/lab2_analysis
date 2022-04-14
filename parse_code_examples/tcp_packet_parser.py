@@ -252,6 +252,7 @@ if __name__ == "__main__":
     
     f = open(cellphone_file, "rb")
     pcap = dpkt.pcap.Reader(f)
+    # print_packets(pcap, 20, fltr=False)
     print_packets(pcap, 20, fltr=True)
 
     f = open(cellphone_file, "rb")

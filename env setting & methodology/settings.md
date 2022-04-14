@@ -34,17 +34,17 @@ TCP ⇒ /sbin/iperf3.1 -c [Server IP] -p [Port Num] -V -R -t 130 -l 250 -b 20k
 
 4G only
 
-(如圖)
+(如圖 4G only)
 
 5G
 
-(如圖)
+(如圖 5G)
 
 stationary ⇒ EE2-249
 
 moving ⇒ 騎車繞行全球變遷中心＆海洋研究所
 
-(如圖)
+(如圖 moving_site)
 
 Period: 0.1, 0.2, 0.3, ..., 1, 2, 3, ..., 10 (sec) ⇒ 19種週期
 
@@ -60,7 +60,7 @@ Period: 0.1, 0.2, 0.3, ..., 1, 2, 3, ..., 10 (sec) ⇒ 19種週期
 
 此外，我們也檢查，iperf3 在每秒傳送複數個封包時，會以什麼樣的 traffic 傳送？會是在一秒內的開頭盡可能一次傳出？還是以固定週期每 0.3 秒傳送一個封包？
 
-![period_check](/Users/jackbedford/Documents/Workspace/110-2/車用疊加層網路之普及運算/Lab2/lab2_analysis/env setting & methodology/period_check.png)
+(如圖 period_check)
 
 檢查結果如圖，週期非常的固定，只有些微的誤差（可忽略）
 

@@ -66,6 +66,7 @@ def print_packet(timestamp, buf, idx, fltr=False):
        Returns:
            bool: whether it is data we want
     """
+    prnt_buf = []
     # Print out the timestamp in UTC
     msg1 = 'Timestamp: %s' % str(to_utc8(timestamp))
 
@@ -74,27 +75,27 @@ def print_packet(timestamp, buf, idx, fltr=False):
         eth = dpkt.ethernet.Ethernet(buf)
         msg2 = 'Ethernet Frame: %s %s %d' % (mac_addr(eth.src), mac_addr(eth.dst), eth.type)
     except dpkt.NeedData:
-        print('Warning: dpkt.NeedData for dpkt.ethernet.Ethernet, try dpkt.sll.SLL (no.%d)' % idx)
+        prnt_buf.append('Warning: dpkt.NeedData for dpkt.ethernet.Ethernet, try dpkt.sll.SLL (no.%d)' % idx)
         try:
             eth = dpkt.sll.SLL(buf)
         except dpkt.NeedData:
-            print('Warning: dpkt.NeedData for dpkt.sll.SLL (no.%d)' % idx)
+            prnt_buf.append('Warning: dpkt.NeedData for dpkt.sll.SLL (no.%d)' % idx)
 
     # Make sure the Ethernet data contains an IP packet
     if isinstance(eth, dpkt.ethernet.Ethernet):
         if not isinstance(eth.data, dpkt.ip.IP):
-            print('Non IP Packet type not supported %s, try dpkt.sll.SLL (no.%d)' % (eth.data.__class__.__name__, idx))
+            prnt_buf.append('Non IP Packet type not supported %s, try dpkt.sll.SLL (no.%d)' % (eth.data.__class__.__name__, idx))
             try:
                 eth = dpkt.sll.SLL(buf)
             except dpkt.NeedData:
-                print('Warning: dpkt.NeedData for dpkt.sll.SLL (no.%d)' % idx)
+                prnt_buf.append('Warning: dpkt.NeedData for dpkt.sll.SLL (no.%d)' % idx)
     if not isinstance(eth.data, dpkt.ip.IP):
-        print('Non IP Packet type not supported %s, forcing the data type into dpkt.ip.IP (no.%d)' % (eth.data.__class__.__name__, idx))
+        prnt_buf.append('Non IP Packet type not supported %s, forcing the data type into dpkt.ip.IP (no.%d)' % (eth.data.__class__.__name__, idx))
         try:
             vlan_tag = dpkt.ethernet.VLANtag8021Q(eth.data[:4])
             ip = dpkt.ip.IP(eth.data[4:])
         except:
-            print('Warning: The Ethernet data does not contain an IP packet (no.%d)' % idx)
+            prnt_buf.append('Warning: The Ethernet data does not contain an IP packet (no.%d)' % idx)
     else:
         # Unpack the data within the Ethernet frame (the IP packet)
         # Pulling out src, dst, length, fragment info, TTL, and Protocol
@@ -111,13 +112,15 @@ def print_packet(timestamp, buf, idx, fltr=False):
     fragment_offset = ip.off & dpkt.ip.IP_OFFMASK
 
     # Print out the info
-    print('----------------------------------------------------------------------')
     print('no.%d' % idx)
+    for msg in prnt_buf:
+        print(msg)
+    print('----------------------------------------------------------------------')
     print(msg1)
     print(msg2)
     print('IP: %s -> %s   (len=%d ttl=%d DF=%d MF=%d offset=%d)' % \
           (inet_to_str(ip.src), inet_to_str(ip.dst), ip.len, ip.ttl, do_not_fragment, more_fragments, fragment_offset))
-    if (ip.len - (20+32)) % Payload.LENGTH == 0:
+    if (len(ip.data.data) != 0) and ((ip.len - (20+32)) % Payload.LENGTH == 0):
         tcp = ip.data
         # tcp.ulen: len( hdr(header)+pyl(payload) )
         print('TCP: %d -> %d                   (len=%d pyl_len=%d)' % \

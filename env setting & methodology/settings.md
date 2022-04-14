@@ -22,7 +22,9 @@ iPerf-3.1
 
 關閉 Wi-Fi
 
-Duration: 130 seconds ⇒ 移動的情境下，前 10 秒 setup 後尚未開始騎車，末 10 秒抵達終點停車（可去頭去尾分析）
+Duration for each setting: 130 seconds ⇒ 移動的情境下，前 10 秒 setup 後尚未開始騎車，末 10 秒抵達終點停車（可去頭去尾分析）
+
+packet length: 250 bytes
 
 ##### 操縱變因
 

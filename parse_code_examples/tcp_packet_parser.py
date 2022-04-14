@@ -55,7 +55,7 @@ def inet_to_str(inet):
     except ValueError:
         return socket.inet_ntop(socket.AF_INET6, inet)
 
-def print_packet(timestamp, buf, idx, fltr=False):
+def print_packet_tcp(timestamp, buf, idx, fltr=False):
     """Print out information about a packet
        
        Args:
@@ -140,7 +140,7 @@ def print_packet(timestamp, buf, idx, fltr=False):
     print()
     return True
 
-def print_packets(pcap, N=50, fltr=False):
+def print_packets_tcp(pcap, N=50, fltr=False):
     """Print out information about each packet in the pcap reader
 
        Args:
@@ -155,13 +155,13 @@ def print_packets(pcap, N=50, fltr=False):
         for i, (timestamp, buf) in enumerate(pcap):
             if count >= N:
                 continue
-            flag = print_packet(timestamp, buf, i+1, fltr)
+            flag = print_packet_tcp(timestamp, buf, i+1, fltr)
             if flag:
                 count += 1
     except dpkt.NeedData:
         print('Warning: dpkt.NeedData occurs when iterating pcap reader')
 
-def get_timestamp_DL(pcap):
+def get_timestamp_DL_tcp(pcap):
     """Calculate latency of each arrived packet and analyze the packet loss events
 
        Args:
@@ -252,12 +252,11 @@ if __name__ == "__main__":
     
     f = open(cellphone_file, "rb")
     pcap = dpkt.pcap.Reader(f)
-    # print_packets(pcap, 20, fltr=False)
-    print_packets(pcap, 20, fltr=True)
+    print_packets_tcp(pcap, 20, fltr=True)
 
     f = open(cellphone_file, "rb")
     pcap = dpkt.pcap.Reader(f)
-    ts_list = get_timestamp_DL(pcap)
+    ts_list = get_timestamp_DL_tcp(pcap)
 
     prev = ts_list[0]
     ls = []

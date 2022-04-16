@@ -12,17 +12,6 @@ from udp_packet_parser import *
 from tcp_packet_parser import *
 
 
-# Using enum class to create enumerations
-class Payload(enum.IntEnum):
-    # !!! Define the length of each packet payload (bytes) !!!
-    LENGTH = 250
-class StrEnum(str, enum.Enum):
-    pass
-class Server(StrEnum):
-    # !!! Define Server IP (Public/Private) !!!
-    PUB_IP = '140.112.20.183'
-    PVT_IP = '192.168.1.248'  # ifconfig
-
 def to_utc8(ts):
     """Convert a timestamp to a readable type (at utc-8)
        
@@ -64,7 +53,7 @@ def print_packet(timestamp, buf, idx, type_, fltr=False):
            timestamp: timestamp of a packet in dpkt pcap reader object
            buf: content of a packets in dpkt pcap reader object
            idx: no. of the capture in pcap reader
-           fltr (bool): display the info of specific data only (warning message of others still displayed)
+           fltr (bool): display the info of specific data only (some warning message of others will still display)
        Returns:
            bool: whether it is data we want
     """
@@ -79,7 +68,7 @@ def print_packets(pcap, type_, N=50, fltr=False):
        Args:
            pcap: dpkt pcap reader object (dpkt.pcap.Reader)
            N (int): maximal display number (default: 50)
-           fltr (bool): display the info of specific data only (warning message of others still displayed)
+           fltr (bool): display the info of specific data only (some warning message of others will still display)
     """
     if type_ == 'udp':
         print_packets_udp(pcap, N, fltr)
@@ -103,18 +92,20 @@ def get_timestamp_DL(pcap, type_):
 if __name__ == "__main__":
     # cellphone_file = ""
     # cellphone_file = "udp.pcap"
-    cellphone_file = "mix.pcap"
+    cellphone_file = "../data/5G/moving/01.pcap"
     
     f = open(cellphone_file, "rb")
     pcap = dpkt.pcap.Reader(f)
-    # print_packets(pcap, 'udp', 20, fltr=True)
-    print_packets(pcap, 'tcp', 20, fltr=True)
+    # print_packets(pcap, 'udp', 100000, fltr=True)
+    print_packets(pcap, 'tcp', 100000, fltr=True)
 
     f = open(cellphone_file, "rb")
     pcap = dpkt.pcap.Reader(f)
     # ts_list = get_timestamp_DL(pcap, 'udp')
     ts_list = get_timestamp_DL(pcap, 'tcp')
 
+    # print('----------------------------------------------------------------------')
+    # pprint(ts_list)
     prev = ts_list[0]
     ls = []
     for i, item in enumerate(ts_list):

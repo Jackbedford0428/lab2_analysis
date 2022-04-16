@@ -55,14 +55,14 @@ def inet_to_str(inet):
     except ValueError:
         return socket.inet_ntop(socket.AF_INET6, inet)
 
-def print_packet_udp(timestamp, buf, idx, fltr=False):
+def print_packet_udp(timestamp, buf, idx, fltr, count):
     """Print out information about a packet
        
        Args:
            timestamp: timestamp of a packet in dpkt pcap reader object
            buf: content of a packets in dpkt pcap reader object
            idx: no. of the capture in pcap reader
-           fltr (bool): display the info of specific data only (warning message of others still displayed)
+           fltr (bool): display the info of specific data only (some warning message of others will still display)
        Returns:
            bool: whether it is data we want
     """
@@ -95,14 +95,23 @@ def print_packet_udp(timestamp, buf, idx, fltr=False):
             vlan_tag = dpkt.ethernet.VLANtag8021Q(eth.data[:4])
             ip = dpkt.ip.IP(eth.data[4:])
         except:
-            prnt_buf.append('Warning: The Ethernet data does not contain an IP packet (no.%d)' % idx)
+            pass
     else:
         # Unpack the data within the Ethernet frame (the IP packet)
         # Pulling out src, dst, length, fragment info, TTL, and Protocol
         ip = eth.data
 
-    if fltr and ((ip.len - (20+8)) % Payload.LENGTH != 0):
+    if not isinstance(ip, dpkt.ip.IP):
+        print('Warning: non-ip packet (no.%d)\n' % idx)
         return False
+
+    if not (isinstance(ip.data, dpkt.tcp.TCP) or isinstance(ip.data, dpkt.udp.UDP)):
+        print('Warning: ip contains neither tcp nor udp packet (no.%d)\n' % idx)
+        return False
+
+    if fltr:
+        if (ip.len - (20+8)) % Payload.LENGTH != 0:
+            return False
 
     # Pull out fragment information (flags and offset all packed into off field, so use bitmasks)
     do_not_fragment = bool(ip.off & dpkt.ip.IP_DF)
@@ -110,15 +119,18 @@ def print_packet_udp(timestamp, buf, idx, fltr=False):
     fragment_offset = ip.off & dpkt.ip.IP_OFFMASK
 
     # Print out the info
-    print('no.%d' % idx)
+    print('no.%d (%d)' % (idx, count))
     for msg in prnt_buf:
         print(msg)
     print('----------------------------------------------------------------------')
     print(msg1)
-    print(msg2)
+    try:
+        print(msg2)
+    except:
+        pass
     print('IP: %s -> %s   (len=%d ttl=%d DF=%d MF=%d offset=%d)' % \
           (inet_to_str(ip.src), inet_to_str(ip.dst), ip.len, ip.ttl, do_not_fragment, more_fragments, fragment_offset))
-    if (ip.len - (20+8)) % Payload.LENGTH == 0:
+    if (isinstance(ip.data, dpkt.udp.UDP)) and ((ip.len - (20+8)) % Payload.LENGTH == 0):
         udp = ip.data
         # udp.ulen: len( hdr(header)+pyl(payload) )
         print('UDP: %d -> %d                   (len=%d pyl_len=%d)' % \
@@ -143,7 +155,7 @@ def print_packets_udp(pcap, N=50, fltr=False):
        Args:
            pcap: dpkt pcap reader object (dpkt.pcap.Reader)
            N (int): maximal display number (default: 50)
-           fltr (bool): display the info of specific data only (warning message of others still displayed)
+           fltr (bool): display the info of specific data only (some warning message of others will still display)
     """
     print('=======================================================================')
     # For each packet in the pcap process the contents
@@ -152,7 +164,7 @@ def print_packets_udp(pcap, N=50, fltr=False):
         for i, (timestamp, buf) in enumerate(pcap):
             if count >= N:
                 continue
-            flag = print_packet_udp(timestamp, buf, i+1, fltr)
+            flag = print_packet_udp(timestamp, buf, i+1, fltr, count+1)
             if flag:
                 count += 1
     except dpkt.NeedData:
@@ -187,12 +199,20 @@ def get_timestamp_DL_udp(pcap):
                     vlan_tag = dpkt.ethernet.VLANtag8021Q(eth.data[:4])
                     ip = dpkt.ip.IP(eth.data[4:])
                 except:
-                    continue
+                    pass
             else:
                 ip = eth.data
 
+            if not isinstance(ip, dpkt.ip.IP):
+                # print('Warning: non-ip packet (no.%d)\n' % idx)
+                continue
+
+            if not (isinstance(ip.data, dpkt.tcp.TCP) or isinstance(ip.data, dpkt.udp.UDP)):
+                # print('Warning: ip contains neither tcp nor udp packet (no.%d)\n' % idx)
+                continue
+
             # Here we set the length checking to be Payload.LENGTH * N + (20+8) to screen out the control messages
-            if (ip.len - (20+8)) % Payload.LENGTH != 0:
+            if (not isinstance(ip.data, dpkt.udp.UDP)) or ((ip.len - (20+8)) % Payload.LENGTH != 0):
                 continue
             
             # Neglect uplink data
@@ -244,12 +264,14 @@ if __name__ == "__main__":
     
     f = open(cellphone_file, "rb")
     pcap = dpkt.pcap.Reader(f)
-    print_packets_udp(pcap, 20, fltr=True)
+    print_packets_udp(pcap, 100000, fltr=True)
 
     f = open(cellphone_file, "rb")
     pcap = dpkt.pcap.Reader(f)
     ts_list = get_timestamp_DL_udp(pcap)
 
+    # print('----------------------------------------------------------------------')
+    # pprint(ts_list)
     prev = ts_list[0]
     ls = []
     for i, item in enumerate(ts_list):
